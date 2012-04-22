@@ -1,0 +1,12 @@
+; $Id$
+name = User Form Modal
+description = User Form in modal
+package = J Custom Modules
+core = 7.x
+
+dependencies[] = user
+dependencies[] = ctools
+
+files[] = ul_modal.module
+
+version = "7.x-dev"
