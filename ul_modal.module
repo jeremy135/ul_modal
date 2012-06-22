@@ -1,0 +1,111 @@
+<?php
+
+function ul_modal_menu() {
+  $items = array();
+  $items['ul_modal/%ctools_js'] = array (
+    'page callback' => 'ul_modal_ctools_form',
+    'page arguments' => array(1),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function ul_modal_block_info() {
+	$blocks['ul_modal'] = array(
+		'info' => 'User Login Block Link',
+		'cache' => DRUPAL_NO_CACHE,
+	);
+	return $blocks;
+}
+//link!!
+function ul_modal_block_view($delta = '') {
+	if ($delta == 'ul_modal') {
+		global $user;
+		if($user->uid == 0){
+		    $output =   ctools_modal_text_button(t('User login'), 'ul_modal/nojs', t('User Login'), 'ctools-modal-ul_modal');
+		} else {
+		    $output = l('Выход', 'user/logout');
+		}
+		$block = array(
+			'content' => $output,
+		);
+	}
+	return $block;
+}
+
+/**
+ * Add js to page
+ *
+ */
+function ul_modal_init() {
+	
+	global $user;
+	if ($user->uid != '0') {
+		return ;
+	}
+     // Include the CTools tools that we need.
+	ctools_include('modal');
+  ctools_include('ajax');
+  
+
+    // Add CTools' javascript to the page.
+  ctools_modal_add_js();
+	ctools_add_js('ajax-responder');
+
+    // Create our own javascript that will be used to theme a modal.
+  $modal_style = array(
+    'ul_modal' => array(
+	    /*'modalSize' => array(
+        'type' => 'fixed',
+				'width' => 500,
+				'height' => 300,
+	    ),*/
+        'modalOptions' => array(
+        'opacity' => .5,
+        'background-color' => '#000',
+	    ),
+	    'animation' => 'fadeIn',
+	    'modalTheme' => 'CToolsULModal',
+	    'throbber' => theme('image', array('path' => ctools_image_path('ajax-loader.gif', 'ul_modal'), 'alt' => t('Loading...'), 'title' => t('Loading'))),
+	),
+    );
+
+  drupal_add_js($modal_style, 'setting');
+
+  ctools_add_js('ul_modal', 'ul_modal');
+  ctools_add_css('ul_modal', 'ul_modal');
+}
+/**
+ *
+ */
+function ul_modal_ctools_form($js = NULL) {
+	
+	
+    if (!$js) {
+        return drupal_get_form('user_login');
+    }
+    
+    ctools_include('modal');
+    ctools_include('ajax');
+		ctools_modal_add_js();
+		ctools_add_js("ajax-responder");
+		
+    $form_state = array(
+      'title' => t('User Login'),
+      'ajax' => TRUE,
+    );
+    $commands = ctools_modal_form_wrapper('user_login', $form_state);
+    //dsm($form_state);
+    if (!empty($form_state['executed'])) {
+      // We'll just overwrite the form output if it was successful.
+       $commands = array();
+      
+        $commands[] = ctools_modal_command_display(t("Sending form"), "Вхожу...");
+      
+        $commands[] = ctools_ajax_command_reload();
+     }
+    
+    print ajax_render($commands);
+    exit;
+}
